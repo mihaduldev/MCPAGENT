@@ -1,0 +1,59 @@
+# ============================================================================
+# PostgreSQL + Redis Only - For Local Development
+# ============================================================================
+# Use this to run just PostgreSQL and Redis for your local Python application
+# Run: docker-compose -f docker-compose.services.yml up -d
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ──────────────────────────────────────────────────────────────────────────
+  # PostgreSQL Database
+  # ──────────────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: mcpagent-postgres
+    environment:
+      POSTGRES_USER: mcpagent
+      POSTGRES_PASSWORD: mcpagent_password
+      POSTGRES_DB: mcpagent
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mcpagent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Redis Cache
+  # ──────────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: mcpagent-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  postgres_data:
+    name: mcpagent-postgres-data
+  redis_data:
+    name: mcpagent-redis-data
+

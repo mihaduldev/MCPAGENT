@@ -9,15 +9,23 @@ from sqlalchemy.orm import sessionmaker, Session
 
 from src.config import settings
 
-# Create database engine
-engine = create_engine(
-    settings.database_url,
-    pool_size=settings.db_pool_size if not settings.database_is_sqlite else 5,
-    max_overflow=settings.db_max_overflow if not settings.database_is_sqlite else 10,
-    pool_timeout=settings.db_pool_timeout,
-    pool_pre_ping=True,  # Verify connections before using
-    echo=settings.debug,  # Log SQL statements in debug mode
-)
+# Create database engine with proper SQLite configuration
+if settings.database_is_sqlite:
+    engine = create_engine(
+        settings.database_url,
+        connect_args={"check_same_thread": False},  # SQLite specific
+        pool_pre_ping=True,
+        echo=settings.debug,
+    )
+else:
+    engine = create_engine(
+        settings.database_url,
+        pool_size=settings.db_pool_size,
+        max_overflow=settings.db_max_overflow,
+        pool_timeout=settings.db_pool_timeout,
+        pool_pre_ping=True,
+        echo=settings.debug,
+    )
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

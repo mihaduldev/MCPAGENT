@@ -1,0 +1,29 @@
+[
+  {
+    "name": "math",
+    "url": "http://localhost:8001/api/mcp/math/mcp",
+    "description": "Mathematical operations and calculations",
+    "enabled": true
+  },
+  {
+    "name": "weather",
+    "url": "http://localhost:8001/api/mcp/weather/mcp",
+    "description": "Real-time weather data using Open-Meteo",
+    "enabled": true
+  },
+  {
+    "name": "web",
+    "url": "http://localhost:8001/api/mcp/web/mcp",
+    "description": "Web scraping and search via Firecrawl",
+    "enabled": false,
+    "api_key": "",
+    "note": "Requires FIRECRAWL_API_KEY - set api_key and enabled=true to use"
+  },
+  {
+    "name": "people",
+    "url": "http://localhost:8001/api/mcp/people/mcp",
+    "description": "DosiBridge team member information",
+    "enabled": true
+  }
+]
+

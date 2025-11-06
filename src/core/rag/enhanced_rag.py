@@ -10,16 +10,24 @@ from chromadb.config import Settings as ChromaSettings
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain.chains import create_retrieval_chain, create_history_aware_retriever
-from langchain.chains.combine_documents import create_stuff_documents_chain
 
 from src.config import settings
 from src.config.logging import get_logger
 
 logger = get_logger(__name__)
+
+# Note: These imports may not be available in all LangChain versions
+# RAG features will be limited if unavailable
+try:
+    from langchain.chains import create_retrieval_chain, create_history_aware_retriever
+    from langchain.chains.combine_documents import create_stuff_documents_chain
+    HAS_CHAINS = True
+except ImportError:
+    HAS_CHAINS = False
+    logger.warning("langchain.chains not available - advanced RAG features disabled")
 
 
 class EnhancedRAGSystem:
@@ -50,10 +58,15 @@ class EnhancedRAGSystem:
     
     def _initialize(self):
         """Initialize RAG components"""
+        # Check if API key is available
+        if not settings.openai_api_key or settings.openai_api_key.get_secret_value() == "sk-test-key-placeholder":
+            logger.warning("OpenAI API key not configured - RAG system will be unavailable")
+            raise ValueError("OpenAI API key required for RAG system")
+        
         # Initialize embeddings
         self.embeddings = OpenAIEmbeddings(
             model=settings.embedding_model,
-            openai_api_key=settings.openai_api_key.get_secret_value() if settings.openai_api_key else None
+            openai_api_key=settings.openai_api_key.get_secret_value()
         )
         
         # Initialize text splitter
@@ -235,6 +248,16 @@ class EnhancedRAGSystem:
         """
         if not self.available:
             return "RAG system not available."
+        
+        if not HAS_CHAINS:
+            # Fallback: Simple retrieval without advanced chains
+            try:
+                docs = self.retrieve(query)
+                context = "\n\n".join([doc.page_content for doc in docs])
+                return f"Retrieved context:\n{context}\n\nNote: Advanced RAG features require langchain.chains module."
+            except Exception as e:
+                logger.error(f"RAG query error: {e}")
+                return f"Error processing query: {str(e)}"
         
         try:
             # Contextualize question using history

@@ -6,9 +6,18 @@ from typing import Optional
 import os
 
 from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_ollama import ChatOllama
+try:
+    from langchain_anthropic import ChatAnthropic
+except ImportError:
+    ChatAnthropic = None
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+except ImportError:
+    ChatGoogleGenerativeAI = None
+try:
+    from langchain_ollama import ChatOllama
+except ImportError:
+    ChatOllama = None
 
 from src.config import settings
 from src.config.logging import get_logger
@@ -84,6 +93,9 @@ def _create_anthropic(
     streaming: bool
 ) -> ChatAnthropic:
     """Create Anthropic Claude LLM"""
+    if ChatAnthropic is None:
+        raise ValueError("langchain-anthropic package not installed")
+    
     model = model or settings.anthropic_model
     api_key = settings.anthropic_api_key
     
@@ -104,6 +116,9 @@ def _create_gemini(
     streaming: bool
 ) -> ChatGoogleGenerativeAI:
     """Create Google Gemini LLM"""
+    if ChatGoogleGenerativeAI is None:
+        raise ValueError("langchain-google-genai package not installed")
+    
     model = model or settings.gemini_model
     api_key = settings.google_api_key
     
@@ -124,6 +139,9 @@ def _create_ollama(
     streaming: bool
 ) -> ChatOllama:
     """Create Ollama LLM (local)"""
+    if ChatOllama is None:
+        raise ValueError("langchain-ollama package not installed")
+    
     model = model or settings.ollama_model
     
     return ChatOllama(

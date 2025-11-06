@@ -123,11 +123,45 @@ class Agent:
                     for call in msg.tool_calls or []:
                         tools_used.append(call.get("name", "unknown"))
             
+            # Extract token usage from result if available
+            # LangGraph/LangChain agents may store token usage in various places
+            token_usage = None
+            
+            # Check result dict for token_usage
+            if isinstance(result, dict) and "token_usage" in result:
+                token_usage = result["token_usage"]
+            
+            # Check final message for response_metadata
+            if not token_usage and hasattr(final_message, "response_metadata") and final_message.response_metadata:
+                token_usage = final_message.response_metadata.get("token_usage")
+            
+            # Check all messages for token usage (some agents store it in intermediate messages)
+            if not token_usage:
+                for msg in reversed(result["messages"]):
+                    if hasattr(msg, "response_metadata") and msg.response_metadata:
+                        usage = msg.response_metadata.get("token_usage")
+                        if usage:
+                            token_usage = usage
+                            break
+                    
+                    # Also check for usage_metadata (alternative format)
+                    if hasattr(msg, "usage_metadata") and msg.usage_metadata:
+                        usage_obj = msg.usage_metadata
+                        if hasattr(usage_obj, "prompt_tokens"):
+                            token_usage = {
+                                "prompt_tokens": usage_obj.prompt_tokens,
+                                "completion_tokens": usage_obj.completion_tokens,
+                                "total_tokens": getattr(usage_obj, "total_token_count", 
+                                                       usage_obj.prompt_tokens + usage_obj.completion_tokens)
+                            }
+                            break
+            
             return {
                 "response": response,
                 "agent": self.name,
                 "agent_type": self.agent_type.value,
                 "tools_used": list(set(tools_used)),
+                "token_usage": token_usage,
                 "success": True
             }
         

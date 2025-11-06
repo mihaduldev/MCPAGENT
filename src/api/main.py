@@ -184,12 +184,13 @@ async def health_check():
     from src.infrastructure.database import engine
     from src.infrastructure.cache.redis_cache import cache
     from src.core.rag import rag_system
+    from sqlalchemy import text
     
     # Check database
     db_healthy = True
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
         db_healthy = False
@@ -239,15 +240,15 @@ async def metrics():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# API Routes (would be imported from separate modules)
+# API Routes
 # ─────────────────────────────────────────────────────────────────────────────
 
-# TODO: Import and include API routers here
-# from src.api.v1 import chat, documents, agents, users
-# app.include_router(chat.router, prefix=f"{settings.api_prefix}/chat", tags=["chat"])
-# app.include_router(documents.router, prefix=f"{settings.api_prefix}/documents", tags=["documents"])
-# app.include_router(agents.router, prefix=f"{settings.api_prefix}/agents", tags=["agents"])
-# app.include_router(users.router, prefix=f"{settings.api_prefix}/users", tags=["users"])
+# Import routers
+from src.api.v1.endpoints import chat, sessions
+
+# Include routers
+app.include_router(chat.router, prefix=settings.api_prefix, tags=["chat"])
+app.include_router(sessions.router, prefix=settings.api_prefix, tags=["sessions"])
 
 
 if __name__ == "__main__":

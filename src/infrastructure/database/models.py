@@ -70,8 +70,8 @@ class Conversation(Base):
     # Agent configuration as JSON
     agent_config: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     
-    # Conversation metadata
-    metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # Conversation metadata (renamed from metadata to avoid SQLAlchemy conflict)
+    meta: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -127,8 +127,8 @@ class Message(Base):
     # RAG context used
     retrieved_context: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     
-    # Metadata
-    metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # Metadata (renamed to avoid SQLAlchemy conflict)
+    meta: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
     
@@ -178,8 +178,8 @@ class Document(Base):
     )  # IDs in vector store
     chunk_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     
-    # Metadata
-    metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # Metadata (renamed to avoid SQLAlchemy conflict)
+    meta: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     
     # Error tracking
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
